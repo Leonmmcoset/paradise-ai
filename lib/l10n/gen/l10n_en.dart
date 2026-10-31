@@ -5079,4 +5079,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get toolDescCharacterCard =>
       'Let it tune its own character sheet slowly';
+
+  @override
+  String get envPlatformUnsupported =>
+      'The local Linux environment and terminal are available on Android. On iOS you can use workspace files, previews, and file tools.';
+
+  @override
+  String get autoBackupSubIOS =>
+      'Automatic backups are stored in the app’s backup folder, accessible in Files. Uninstalling the app deletes them. Export a copy elsewhere or configure remote backups to keep them after uninstalling.';
 }

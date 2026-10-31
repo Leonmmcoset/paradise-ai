@@ -50,6 +50,7 @@ import 'human/notifications.dart';
 import 'human/scheduler.dart';
 import 'human/sticker_lib.dart';
 import 'models.dart';
+import 'local_files.dart';
 import 'oii/backup_archive.dart' show buildBackupArchive, hasOiiBackupManifest, parseBackupArchive, safeChatFileName, shaHex;
 import 'skills/skill.dart';
 import 'skills/skill_prompt.dart';
@@ -62,6 +63,7 @@ import 'workspace/host_file_tools.dart';
 import 'workspace/workspace.dart';
 import 'workspace/workspace_metadata.dart';
 import 'workspace/workspace_runtime.dart';
+import 'workspace/workspace_platform.dart';
 import 'workspace/workspace_bootstrap.dart';
 import 'workspace/workspace_store.dart';
 import 'workspace/workspace_tools.dart';
@@ -409,6 +411,7 @@ FullBackupSink? _debugFullSink;
   String skippedRelease = '';
 
   static Future<Store> load({String? dbPath}) async {
+    await LocalFiles.initialize();
     final s = Store._(await SharedPreferences.getInstance());
     // base/key/model now live in AiConfig and are migrated there
     s._loadPersonas();
@@ -426,7 +429,7 @@ FullBackupSink? _debugFullSink;
     s.dark = s._sp.getBool('dark') ?? false;
     s.textSize = s._sp.getDouble('textSize') ?? 16;
     s.bubbleRadius = s._sp.getDouble('radius') ?? 17;
-    s.wallpaperPath = s._sp.getString('wallpaper') ?? '';
+    s.wallpaperPath = LocalFiles.resolve(s._sp.getString('wallpaper') ?? '');
     s.wallpaperBlur = s._sp.getBool('wallpaperBlur') ?? true;
     final wc = s._sp.getInt('wallpaperColor');
     s.wallpaperColor = wc == null || wc == 0 ? null : wc;
@@ -441,8 +444,14 @@ FullBackupSink? _debugFullSink;
     await s._loadChats(dbPath: dbPath);
     s._loadAutoBackup();
     s._loadRemoteBackup();
-    s._backupSink = MediaStoreBackupSink();
-    s._fullSink = MediaStoreFullBackupSink();
+    if (Platform.isIOS) {
+      final dir = Directory(p.join((await getApplicationDocumentsDirectory()).path, 'backup'));
+      s._backupSink = DirBackupSink(dir);
+      s._fullSink = DirFullBackupSink(dir);
+    } else {
+      s._backupSink = MediaStoreBackupSink();
+      s._fullSink = MediaStoreFullBackupSink();
+    }
     // the voice module rides along here rather than being handed in from main:
     // it reads the same SharedPreferences this store already holds, and every
     // path that builds a Store gets a working module without a second load.
@@ -968,7 +977,7 @@ _fullBackupRunning = false;
     // very first card rather than losing what the user already wrote
     if (personas.isEmpty) {
       final name = _sp.getString('userName') ?? _sp.getString('user');
-      final avatar = _sp.getString('userAvatar') ?? '';
+      final avatar = LocalFiles.resolve(_sp.getString('userAvatar') ?? '');
       if (name == null && avatar.isEmpty) return;
       final card = UserPersona(
         id: _pid(),

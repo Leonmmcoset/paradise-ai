@@ -9,6 +9,7 @@ import '../../data/store.dart';
 import '../../data/workspace/android_proot_runtime.dart';
 import '../../data/workspace/environment_installer.dart';
 import '../../data/workspace/workspace_bootstrap.dart';
+import '../../data/workspace/workspace_platform.dart';
 import '../../l10n/x.dart';
 import '../tg_cells.dart';
 import 'common.dart';
@@ -44,6 +45,7 @@ class _WorkspaceBodyState extends State<_WorkspaceBody> {
   }
 
   Future<void> _load() async {
+    if (!supportsLocalEnvironment) return;
     final stack = _stack;
     if (stack == null) return;
     _sub?.cancel();
@@ -105,7 +107,8 @@ class _WorkspaceBodyState extends State<_WorkspaceBody> {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(l.onboardWsEnvTitle, style: TextStyle(color: p.title, fontSize: 16.5, fontWeight: FontWeight.w600, decoration: TextDecoration.none)),
                 const SizedBox(height: 6),
-                Text(l.onboardWsEnvBody, style: TextStyle(color: p.msg, fontSize: 13.5, decoration: TextDecoration.none, height: 1.4)),
+                Text(supportsLocalEnvironment ? l.onboardWsEnvBody : l.envPlatformUnsupported, style: TextStyle(color: p.msg, fontSize: 13.5, decoration: TextDecoration.none, height: 1.4)),
+                if (supportsLocalEnvironment) ...[
                 const SizedBox(height: 12),
                 if (_installing) ...[
                   Text(
@@ -140,6 +143,7 @@ class _WorkspaceBodyState extends State<_WorkspaceBody> {
                         ),
                       ),
                   ]),
+                ],
                 ],
               ]),
             ),

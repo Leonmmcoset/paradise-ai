@@ -6,6 +6,7 @@ import '../../core/overlays.dart';
 import '../../core/theme.dart';
 import '../../core/ui_kit.dart';
 import '../../data/models.dart';
+import '../../data/local_files.dart';
 import '../../data/store.dart';
 import '../../l10n/x.dart';
 import '../tg_cells.dart';
@@ -176,7 +177,9 @@ class _SelfBodyState extends State<_SelfBody> {
     try {
       final x = await ip.ImagePicker().pickImage(source: ip.ImageSource.gallery, imageQuality: 92);
       if (x == null) return;
-      _st.updatePersonaCard(_card.id, (p) => p.avatarPath = x.path);
+      final path = await LocalFiles.keep(x.path, 'avatars');
+      if (!mounted) return;
+      _st.updatePersonaCard(_card.id, (p) => p.avatarPath = path);
       if (mounted) setState(() {});
     } catch (_) {
       if (mounted) showBulletin(context, context.l.galleryUnavailable);

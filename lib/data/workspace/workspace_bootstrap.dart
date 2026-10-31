@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'android_proot_runtime.dart';
 import 'environment_installer.dart';
 import 'workspace_channel.dart';
+import 'workspace_platform.dart';
 import 'workspace_runtime.dart';
 
 /// Owns the channel, the installer and the one runtime.
@@ -31,6 +32,7 @@ class WorkspaceStack {
   /// decides whether anything is installed, and registering first would publish
   /// a status computed against a tree that recovery is about to replace.
   Future<void> start() async {
+    if (!supportsLocalEnvironment) return;
     await dirs.ensure();
     await installer.refresh();
     // An install or a removal changes whether the environment-backed tools can
@@ -59,7 +61,7 @@ Future<WorkspaceStack> bootstrapWorkspace() async {
   final channel = WorkspaceChannel();
   final env = await WorkspaceEnvironment.create(channel);
   final stack = WorkspaceStack(channel: channel, installer: EnvironmentInstaller(channel: channel, dirs: env.dirs), dirs: env.dirs);
-  workspaceRuntimeProvider.register(stack.runtime());
+  if (supportsLocalEnvironment) workspaceRuntimeProvider.register(stack.runtime());
   await stack.start();
   // The one probe that makes the shell tool exist. wsAvailable reads
   // lastStatus, and without this call it stays null for the whole process, so
@@ -96,5 +98,6 @@ final ExtractProgress extractProgress = ExtractProgress();
 /// app: the event channel is broadcast and re-listening per page would deliver
 /// each chunk to every page that was ever opened.
 void watchExtractEvents(WorkspaceChannel channel) {
+  if (!supportsLocalEnvironment) return;
   channel.onExtract((entries, bytes, entry) => extractProgress.update(entries, bytes, entry));
 }

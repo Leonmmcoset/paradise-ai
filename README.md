@@ -7,6 +7,7 @@
 [![CI](https://github.com/Celvra/paradise/actions/workflows/ci.yml/badge.svg)](https://github.com/Celvra/paradise/actions/workflows/ci.yml)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 [![Platform: Android](https://img.shields.io/badge/Platform-Android-3DDC84.svg)](https://developer.android.com)
+[![Platform: iOS](https://img.shields.io/badge/Platform-iOS_15%2B-000000.svg)](docs/ios.md)
 
 [English](README_EN.md)
 
@@ -32,6 +33,8 @@
 - 从 models.dev 拉取模型元数据。
 
 还有更多功能，等待您发现。
+
+iOS 的构建、未签名 IPA、依赖兼容性和系统限制见 [iOS 支持说明](docs/ios.md)。iOS 保留工作区文件工具，本地 Linux 环境与终端仅支持 Android。
 
 ### 沉浸式聊天
 

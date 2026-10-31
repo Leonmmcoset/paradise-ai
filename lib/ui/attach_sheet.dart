@@ -17,6 +17,7 @@ import '../core/theme.dart';
 import '../core/ui_kit.dart';
 import '../data/ai/provider_model.dart';
 import '../data/models.dart';
+import '../data/local_files.dart';
 import '../data/store.dart';
 import '../l10n/x.dart';
 import 'ai_model_picker.dart' show AiScope;
@@ -83,6 +84,7 @@ class _AttachSheetState extends State<_AttachSheet> {
   int _tab = 0;
   final List<_Pick> _sel = [];
   final TextEditingController _cap = TextEditingController();
+  bool _sending = false;
 
   @override
   void dispose() {
@@ -98,10 +100,27 @@ class _AttachSheetState extends State<_AttachSheet> {
     return chainCaps(AiScope.read(context).settings, store.chainFor(widget.chat));
   }
 
-  void _send(List<_Item> items) {
-    if (items.isEmpty) return;
-    Store.read(context).sendBatch(widget.chat, items, reply: widget.replyId);
-    Navigator.of(context).pop();
+  Future<void> _send(List<_Item> items) async {
+    if (items.isEmpty || _sending) return;
+    _sending = true;
+    try {
+      final kept = <_Item>[];
+      for (final item in items) {
+        final data = Map<String, dynamic>.of(item.data);
+        for (final key in const ['path', 'thumb']) {
+          final path = data[key];
+          if (path is String && path.isNotEmpty) data[key] = await LocalFiles.keep(path, 'attachments');
+        }
+        kept.add((kind: item.kind, data: data, text: item.text));
+      }
+      if (!mounted) return;
+      Store.read(context).sendBatch(widget.chat, kept, reply: widget.replyId);
+      Navigator.of(context).pop();
+    } catch (_) {
+      if (mounted) showBulletin(context, context.l.dataBackupSaveFailed);
+    } finally {
+      _sending = false;
+    }
   }
 
   void _unsupported(bool video) {
@@ -158,7 +177,8 @@ class _AttachSheetState extends State<_AttachSheet> {
         continue;
       }
       String? path = s.path;
-      if (s.asset != null) path = (await s.asset!.originFile)?.path;
+      // The non-original photo export is JPEG on iOS, including HEIC assets.
+      if (s.asset != null) path = (await s.asset!.file)?.path;
       if (path == null) continue;
       items.add((kind: MsgKind.photo, data: {'path': path, 'name': path.split('/').last}, text: caption));
     }
@@ -178,7 +198,8 @@ class _AttachSheetState extends State<_AttachSheet> {
     try {
       final bytes = await a.thumbnailDataWithSize(const pm.ThumbnailSize(480, 480));
       if (bytes == null) return null;
-      final f = File('${(await _thumbDir).path}/${a.id}.jpg');
+      // PHAsset identifiers contain slashes on iOS, so they are not filenames.
+      final f = File('${(await _thumbDir).path}/${Uri.encodeComponent(a.id)}.jpg');
       await f.writeAsBytes(bytes, flush: true);
       return f.path;
     } catch (_) {

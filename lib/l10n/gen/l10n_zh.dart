@@ -4861,6 +4861,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get toolDescCharacterCard => '让它缓慢微调自己的人设';
+
+  @override
+  String get envPlatformUnsupported =>
+      '本地 Linux 环境和终端仅支持 Android。iOS 可以使用工作区文件、预览和文件工具。';
+
+  @override
+  String get autoBackupSubIOS =>
+      '自动备份保存在应用的 backup 文件夹中，可从“文件”App 访问。卸载应用会删除这些备份，请导出到其他位置或设置远程备份。';
 }
 
 /// The translations for Chinese, using the Han script (`zh_Hant`).
@@ -9719,4 +9727,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get toolDescCharacterCard => '讓它緩慢微調自己的人設';
+
+  @override
+  String get envPlatformUnsupported =>
+      '本機 Linux 環境和終端機僅支援 Android。iOS 可使用工作區檔案、預覽及檔案工具。';
+
+  @override
+  String get autoBackupSubIOS =>
+      '自動備份儲存在應用程式的 backup 資料夾，可透過「檔案」App 存取。移除應用程式會刪除這些備份，請匯出至其他位置或設定遠端備份。';
 }

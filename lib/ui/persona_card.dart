@@ -10,6 +10,7 @@ import '../core/theme.dart';
 import '../core/ui_kit.dart';
 import '../data/ai/provider_model.dart';
 import '../data/models.dart';
+import '../data/local_files.dart';
 import '../data/speech_config.dart';
 import '../data/store.dart';
 import '../l10n/x.dart';
@@ -197,7 +198,9 @@ class _PersonaCardPageState extends State<PersonaCardPage> {
     try {
       final x = await ip.ImagePicker()
           .pickImage(source: ip.ImageSource.gallery, imageQuality: 92);
-      if (x != null && mounted) setState(() => _avatar = x.path);
+      if (x == null) return;
+      final path = await LocalFiles.keep(x.path, 'avatars');
+      if (mounted) setState(() => _avatar = path);
     } catch (_) {
       if (mounted) showBulletin(context, context.l.galleryUnavailable);
     }

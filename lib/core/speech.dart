@@ -85,8 +85,23 @@ class SpeechService {
     await stop();
     final t = _engine();
     try {
+      if (Platform.isIOS) {
+        await t.setSharedInstance(true);
+        await t.setIosAudioCategory(IosTextToSpeechAudioCategory.playback, [], IosTextToSpeechAudioMode.spokenAudio);
+      }
       if (language.trim().isNotEmpty) await t.setLanguage(language.trim());
-      if (voice.trim().isNotEmpty) await t.setVoice({'name': voice.trim()});
+      if (voice.trim().isNotEmpty) {
+        final selected = <String, String>{'name': voice.trim()};
+        if (Platform.isIOS) {
+          // Apple accepts a voice identifier or a name + locale pair; name
+          // alone is ignored. Resolve the saved name against installed voices.
+          final voices = await t.getVoices as List;
+          final match = voices.whereType<Map>().where((v) => v['name'] == voice.trim() || v['identifier'] == voice.trim()).firstOrNull;
+          if (match?['identifier'] is String) selected['identifier'] = match!['identifier'] as String;
+          if (match?['locale'] is String) selected['locale'] = match!['locale'] as String;
+        }
+        await t.setVoice(selected);
+      }
       // the platform range is 0.0 to 1.0 on Android and 0.0 to 2.0 on iOS; the
       // clamp keeps a stored 1.5 from being rejected outright by Android
       await t.setSpeechRate((speed.clamp(0.0, 1.0)).toDouble());

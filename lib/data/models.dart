@@ -4,6 +4,7 @@ import '../l10n/x.dart';
 import 'ai/provider_model.dart';
 import 'human/human_models.dart';
 import 'observable.dart';
+import 'local_files.dart';
 import 'workspace/workspace.dart';
 
 class Persona {
@@ -224,7 +225,7 @@ class Persona {
         emoji: j['emoji'] as String? ?? '',
         examples: j['examples'] as String? ?? '',
         // personas saved before the photo existed simply have no key
-        avatarPath: j['avatarPath'] as String? ?? '',
+        avatarPath: LocalFiles.resolve(j['avatarPath'] as String? ?? ''),
         modelProvider: j['modelProvider'] as String? ?? '',
         modelId: j['modelId'] as String? ?? '',
         // an older build had no switch at all, the forgiving default keeps
@@ -348,7 +349,7 @@ class UserPersona {
         name: j['name'] as String? ?? '',
         title: j['title'] as String? ?? '',
         description: j['description'] as String? ?? '',
-        avatarPath: j['avatarPath'] as String? ?? '',
+        avatarPath: LocalFiles.resolve(j['avatarPath'] as String? ?? ''),
         color: (j['color'] as num?)?.toInt() ?? 4,
         // an unknown name from a newer build falls back to the safe default
         position: PersonaPosition.values.firstWhere((e) => e.name == j['position'], orElse: () => PersonaPosition.inPrompt),
@@ -609,6 +610,9 @@ class Msg {
     for (final k in const ['path', 'name', 'size']) {
       if (data[k] == null && j[k] != null) data[k] = j[k];
     }
+    for (final k in const ['path', 'thumb', 'value']) {
+      if (data[k] is String) data[k] = LocalFiles.resolve(data[k] as String);
+    }
     if (kind == MsgKind.sticker && data['emoji'] == null && data['e'] != null) {
       data['emoji'] = data['e'];
     }
@@ -716,7 +720,7 @@ class Chat extends ChangeNotifier {
         draft: j['draft'] as String? ?? '',
         markedUnread: j['markedUnread'] as bool? ?? false,
         personaId: j['personaId'] as String?,
-        wallpaperPath: j['wallpaperPath'] as String?,
+        wallpaperPath: j['wallpaperPath'] is String ? LocalFiles.resolve(j['wallpaperPath'] as String) : null,
       )..human = j['human'] is Map ? HumanState.fromJson(Map<String, dynamic>.from(j['human'] as Map)) : HumanState()
       ..ws = WorkspaceBinding.fromJson(j['ws'] is Map ? Map<String, dynamic>.from(j['ws'] as Map) : null);
 }

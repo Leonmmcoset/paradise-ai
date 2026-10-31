@@ -36,10 +36,8 @@ jobs:
       - name: Test
         run: flutter test
 
-      # The other half of the oii contract. `flutter test` cannot load a code
-      # asset, so the dart side only proves it agrees with itself; this is the
-      # half that parses the shared fixture with the real oii engine and checks
-      # the two agree. Host target only, so no android rustup targets needed.
+      # Parse the shared backup fixture with the real Rust OII engine. Host
+      # target only, so no Android Rust targets are needed for this check.
       - name: Test the oii bridge
         run: cargo test --manifest-path packages/oii_bridge/native/Cargo.toml
 
@@ -49,7 +47,7 @@ jobs:
         working-directory: packages/oii_bridge
         run: |
           flutter pub get
-          LD_LIBRARY_PATH=$PWD/build/native_assets/linux flutter test
+          flutter test
 
       # A fixture that drifts is a silent lie: dart would keep passing its own
       # half while the files stopped being oii. Fail loudly instead.
@@ -125,4 +123,49 @@ jobs:
         with:
           name: paradise-debug-apk
           path: build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 14
+
+  build-ios:
+    name: Test iOS and build unsigned IPA
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.5'
+          channel: stable
+          cache: true
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
+
+      - name: Check Apple build tools
+        run: |
+          xcodebuild -version
+          pod --version
+
+      - run: flutter pub get
+
+      # Setup can exit successfully after skipping a failed download, so check
+      # the actual device/simulator slices before invoking CocoaPods.
+      - name: Prepare the Typst native libraries
+        run: |
+          dart run typst_flutter:setup
+          python3 tool/check_ios_native.py
+
+      - name: Exercise native plugins on an iPhone simulator
+        run: bash tool/run_ios_smoke.sh
+
+      - name: Build unsigned release IPA
+        run: bash tool/build_unsigned_ipa.sh
+
+      - name: Upload unsigned IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: paradise-ios-unsigned-ipa
+          path: build/ios/ipa/*-ios-unsigned.ipa
+          if-no-files-found: error
           retention-days: 14

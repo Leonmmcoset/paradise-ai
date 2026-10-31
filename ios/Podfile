@@ -1,0 +1,97 @@
+platform :ios, '15.0'
+
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+project 'Runner', {
+  'Debug' => :debug,
+  'Profile' => :release,
+  'Release' => :release,
+}
+
+def flutter_root
+  generated = File.expand_path(File.join('Flutter', 'Generated.xcconfig'), __dir__)
+  raise "#{generated} is missing. Run flutter pub get first." unless File.exist?(generated)
+  File.foreach(generated) do |line|
+    match = line.match(/FLUTTER_ROOT\=(.*)/)
+    return match[1].strip if match
+  end
+  raise "FLUTTER_ROOT is missing from #{generated}. Run flutter pub get again."
+end
+
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+flutter_ios_podfile_setup
+
+# Entry points looked up by typst_flutter 3.0.0 / flutter_rust_bridge 2.13.0.
+# Root these symbols so static archive members are linked and survive stripping.
+def typst_ffi_symbols
+  symbols = %w[
+    store_dart_post_cobject
+    frb_create_shutdown_callback
+    frb_dart_fn_deliver_output
+    frb_dart_opaque_dart2rust_encode
+    frb_dart_opaque_drop_thread_box_persistent_handle
+    frb_dart_opaque_rust2dart_decode
+    frb_free_wire_sync_rust2dart_dco
+    frb_free_wire_sync_rust2dart_sse
+    frb_get_rust_content_hash
+    frb_init_frb_dart_api_dl
+    frb_pde_ffi_dispatcher_primary
+    frb_pde_ffi_dispatcher_sync
+    frb_rust_vec_u8_free
+    frb_rust_vec_u8_new
+    frb_rust_vec_u8_resize
+  ]
+  %w[CompiledDocument TypstEngine].each do |type|
+    %w[increment decrement].each do |operation|
+      symbols << "frbgen_typst_flutter_rust_arc_#{operation}_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInner#{type}"
+    end
+  end
+  symbols
+end
+
+target 'Runner' do
+  use_frameworks!
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+  target 'RunnerTests' do
+    inherit! :search_paths
+  end
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+      if target.name == 'permission_handler_apple'
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] += [
+          'PERMISSION_PHOTOS=1',
+          'PERMISSION_NOTIFICATIONS=1',
+        ]
+      end
+      # Location sharing uses only a foreground position, never Always access.
+      if target.name == 'geolocator_apple'
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'BYPASS_PERMISSION_LOCATION_ALWAYS=1'
+      end
+      if target.name == 'typst_flutter'
+        # The published XCFramework contains static .a slices. The plugin's
+        # dummy C file references no Rust symbols, so the linker otherwise
+        # omits the FFI implementation from typst_flutter.framework.
+        framework = File.expand_path('.symlinks/plugins/typst_flutter/.typst_flutter_prebuilt/ios/typst_flutter.xcframework', __dir__)
+        info = File.join(framework, 'Info.plist')
+        raise 'Typst iOS libraries missing. Run dart run typst_flutter:setup --force before pod install.' unless File.file?(info)
+        Xcodeproj::Plist.read_from_path(info)['AvailableLibraries'].each do |slice|
+          next unless slice['SupportedPlatform'] == 'ios'
+          sdk = slice['SupportedPlatformVariant'] == 'simulator' ? 'iphonesimulator' : 'iphoneos'
+          library = File.join(framework, slice['LibraryIdentifier'], slice['LibraryPath'])
+          raise "Typst library missing: #{library}" unless File.file?(library)
+          config.build_settings["OTHER_LDFLAGS[sdk=#{sdk}*]"] = [
+            '$(inherited)', %Q("#{library}"),
+            *typst_ffi_symbols.map { |symbol| "-Wl,-u,_#{symbol}" },
+          ]
+        end
+      end
+    end
+  end
+end

@@ -6132,5 +6132,7 @@
   "@humanChatInvalidCard": {
     "description": "Bulletin when the card payload is broken"
   },
-  "toolDescCharacterCard": "Let it tune its own character sheet slowly"
+  "toolDescCharacterCard": "Let it tune its own character sheet slowly",
+  "envPlatformUnsupported": "The local Linux environment and terminal are available on Android. On iOS you can use workspace files, previews, and file tools.",
+  "autoBackupSubIOS": "Automatic backups are stored in the app’s backup folder, accessible in Files. Uninstalling the app deletes them. Export a copy elsewhere or configure remote backups to keep them after uninstalling."
 }

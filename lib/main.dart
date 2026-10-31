@@ -123,6 +123,7 @@ class TgApp extends StatelessWidget {
                   statusBarColor: const Color(0x00000000),
                   systemNavigationBarColor: const Color(0x00000000),
                   statusBarIconBrightness: dark ? Brightness.light : Brightness.dark,
+                  statusBarBrightness: dark ? Brightness.dark : Brightness.light,
                   systemNavigationBarIconBrightness: dark ? Brightness.light : Brightness.dark,
                   systemNavigationBarContrastEnforced: false,
                 ),

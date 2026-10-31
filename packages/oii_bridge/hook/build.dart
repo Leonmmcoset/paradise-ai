@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:code_assets/code_assets.dart';
 import 'package:hooks/hooks.dart';
 
+import 'rust_target.dart';
+
 // Builds the rust cdylib in native/ with cargo. The NDK is found through
 // ANDROID_NDK_HOME or the sdkmanager layout flutter installs, a cargo
 // toolchain with the android target is assumed present on build machines.
@@ -12,16 +14,18 @@ void main(List<String> args) async {
     if (!input.config.buildCodeAssets) return;
     final code = input.config.code;
 
-    final target = _target(code);
+    final target = rustTarget(code.targetOS, code.targetArchitecture,
+        iosSdk: code.targetOS == OS.iOS ? code.iOS.targetSdk : null);
     if (target == null) {
-      // desktop still goes through the same bridge but is not wired yet;
-      // fail loudly rather than ship a missing asset
       throw UnsupportedError(
           'oii_bridge: no cargo target for ${code.targetOS} ${code.targetArchitecture}');
     }
 
     final cc = _ccFor(target, code, input.packageRoot);
     final ar = _arFor(code, input.packageRoot);
+    final apple = code.targetOS == OS.iOS || code.targetOS == OS.macOS;
+    final sdk = apple ? _xcrun(code, '--show-sdk-path') : null;
+    final appleTarget = apple ? _appleClangTarget(code) : null;
     final tripleVar = target.replaceAll('-', '_');
     // On an ARM64 Linux host the NDK r28 x86_64 lld runs under emulation and
     // crashes while linking this cdylib (free(): invalid next size). The native
@@ -46,6 +50,21 @@ void main(List<String> args) async {
         'CARGO_TARGET_${tripleU}_RUSTFLAGS': '-Clink-arg=$clangFlag',
       if (hostLld != null)
         'RUSTFLAGS': '${Platform.environment['RUSTFLAGS'] ?? ''} -C link-arg=-fuse-ld=$hostLld'.trim(),
+      if (sdk != null) 'SDKROOT': sdk,
+      if (code.targetOS == OS.iOS)
+        'IPHONEOS_DEPLOYMENT_TARGET': '${code.iOS.targetVersion}.0',
+      if (code.targetOS == OS.macOS)
+        'MACOSX_DEPLOYMENT_TARGET': '${code.macOS.targetVersion}.0',
+      if (sdk != null && appleTarget != null)
+        'CFLAGS_$tripleVar': '-target $appleTarget -isysroot "$sdk"',
+      // Encoded flags preserve SDK paths containing spaces. Explicitly select
+      // the simulator SDK; using the host's clang defaults links a macOS dylib.
+      if (sdk != null && appleTarget != null)
+        'CARGO_ENCODED_RUSTFLAGS': [
+          if (Platform.environment['CARGO_ENCODED_RUSTFLAGS'] case final flags?) flags,
+          '-C', 'link-arg=-isysroot', '-C', 'link-arg=$sdk',
+          '-C', 'link-arg=-target', '-C', 'link-arg=$appleTarget',
+        ].join('\u001f'),
     };
 
     // CodeConfig carries no Flutter build mode, and hooks run with almost the
@@ -82,7 +101,7 @@ void main(List<String> args) async {
     };
     final result = await Process.run(
       _cargo(),
-      ['build', '--target', target, if (profile == 'release') '--release'],
+      ['build', '--locked', '--target', target, if (profile == 'release') '--release'],
       workingDirectory: dir.toFilePath(),
       environment: env2,
       runInShell: Platform.isWindows,
@@ -92,7 +111,7 @@ void main(List<String> args) async {
           'cargo failed (${result.exitCode}):\n${result.stdout}\n${result.stderr}');
     }
 
-    final libName = 'liboii_bridge.so';
+    final libName = rustLibraryName(code.targetOS);
     final built = input.outputDirectoryShared
         .resolve('libbridge/$target/$profile/$libName');
     final cargoOut = File(
@@ -206,27 +225,29 @@ String? _nativeLldForArmHost() {
   return File(linker).existsSync() ? linker : null;
 }
 
-String? _target(CodeConfig code) {
-  if (code.targetOS == OS.android) {
-    return switch (code.targetArchitecture) {
-      Architecture.arm64 => 'aarch64-linux-android',
-      Architecture.arm => 'armv7-linux-androideabi',
-      Architecture.x64 => 'x86_64-linux-android',
-      _ => null,
-    };
+String _appleSdk(CodeConfig code) =>
+    code.targetOS == OS.iOS ? code.iOS.targetSdk.type : 'macosx';
+
+String _xcrun(CodeConfig code, String argument, [String? tool]) {
+  final result = Process.runSync('xcrun',
+      ['--sdk', _appleSdk(code), argument, if (tool != null) tool]);
+  if (result.exitCode != 0) {
+    throw StateError('oii_bridge: Xcode SDK lookup failed: ${result.stderr}');
   }
-  // host builds for tests: cargo targets the running machine
-  if (code.targetOS == OS.linux) {
-    return switch (code.targetArchitecture) {
-      Architecture.arm64 => 'aarch64-unknown-linux-gnu',
-      Architecture.x64 => 'x86_64-unknown-linux-gnu',
-      _ => null,
-    };
-  }
-  return null;
+  return '${result.stdout}'.trim();
+}
+
+String _appleClangTarget(CodeConfig code) {
+  final arch = code.targetArchitecture == Architecture.arm64 ? 'arm64' : 'x86_64';
+  if (code.targetOS == OS.macOS) return '$arch-apple-macos${code.macOS.targetVersion}.0';
+  final simulator = code.iOS.targetSdk == IOSSdk.iPhoneSimulator ? '-simulator' : '';
+  return '$arch-apple-ios${code.iOS.targetVersion}.0$simulator';
 }
 
 String? _ccFor(String target, CodeConfig code, Uri packageRoot) {
+  if (code.targetOS == OS.iOS || code.targetOS == OS.macOS) {
+    return _xcrun(code, '--find', 'clang');
+  }
   if (code.targetOS == OS.android) {
     final ndk = _ndkRoot(packageRoot);
     if (ndk == null) return null;
@@ -267,6 +288,9 @@ String? _clangTargetFlag(String target, CodeConfig code) {
 }
 
 String? _arFor(CodeConfig code, Uri packageRoot) {
+  if (code.targetOS == OS.iOS || code.targetOS == OS.macOS) {
+    return _xcrun(code, '--find', 'ar');
+  }
   if (code.targetOS != OS.android) return null;
   final ndk = _ndkRoot(packageRoot);
   if (ndk == null) return null;

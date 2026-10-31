@@ -71,10 +71,16 @@ dev_dependencies:
   file_picker_platform_interface: ^4.0.0
   flutter_test:
     sdk: flutter
+  integration_test:
+    sdk: flutter
   path_provider_platform_interface: ^2.1.3
   sqflite_common_ffi: ^2.4.3
 
 flutter:
+  # typst_flutter ships its native iOS library through its CocoaPods spec.
+  # Keep one dependency manager so permission_handler's build flags apply too.
+  config:
+    enable-swift-package-manager: false
   uses-material-design: true
   generate: true
 

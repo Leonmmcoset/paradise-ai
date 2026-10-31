@@ -16,6 +16,7 @@ import '../core/ui_kit.dart';
 import '../data/models.dart';
 import '../data/store.dart';
 import '../data/workspace/workspace_metadata.dart';
+import '../data/workspace/workspace_platform.dart';
 import '../data/workspace/workspace_paths.dart' show PathResolutionException;
 import '../l10n/x.dart';
 import 'attach_sheet.dart';
@@ -361,7 +362,7 @@ class _ChatPageState extends State<ChatPage> with TickerProviderStateMixin {
       MenuItem(l.headerMenuLockPersona, Ic.user, _openPersonaLock, sub: locked.name.trim().isEmpty ? locked.initial : locked.name.trim()),
       MenuItem(l.wallpaperChatTitle, Ic.image, () => openWallpaperSheet(context, chat: chat), sub: chat.wallpaperPath == null ? null : l.wallpaperRow),
       MenuItem(l.wsTitle, Ic.folder, () => bindWorkspace(context, _store, chat), sub: _store.wsFor(chat)?.name),
-       if (_store.wsFor(chat) != null)
+       if (supportsLocalEnvironment && _store.wsFor(chat) != null)
          MenuItem(l.termTitle, Ic.terminal, () => openWorkspaceTerminal(context, _store.wsFor(chat)!)),
       MenuItem(l.headerMenuClearHistory, Ic.trash, () => _confirmDelete(l.dialogClearHistoryHereTitle, l.dialogClearHistoryHereMessage, () => _store.clearHistory(chat))),
       MenuItem(l.headerMenuDeleteChat, Ic.close, () => _confirmDelete(l.dialogDeleteChatHereTitle, l.dialogDeleteChatMessage(chat.persona.name), () {

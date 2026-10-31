@@ -4,11 +4,8 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:oii_bridge/oii_bridge.dart';
 
-// Needs the built library. `flutter test` inside the package runs the hook,
-// but the test runner does not dlopen the bundled asset into the process, so
-// point the loader at it explicitly:
-//   LD_LIBRARY_PATH=$PWD/build/native_assets/linux flutter test
-// from the app the flutter tool bundles it and process() finds the symbols.
+// `flutter test` inside this package runs the Cargo hook and resolves the
+// resulting code asset through @Native, just as the application does.
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

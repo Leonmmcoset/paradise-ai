@@ -20,7 +20,16 @@ import '../store.dart';
 //     same job as a last resort when the OS killed the alarms (aggressive OEMs)
 
 const _channel = AndroidNotificationDetails('lib3_messages', 'Messages', channelDescription: 'Messages from your assistants', importance: Importance.high, priority: Priority.high);
-const _details = NotificationDetails(android: _channel);
+const _details = NotificationDetails(android: _channel, iOS: DarwinNotificationDetails());
+
+const notificationSettings = InitializationSettings(
+  android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+  iOS: DarwinInitializationSettings(
+    requestAlertPermission: false,
+    requestBadgePermission: false,
+    requestSoundPermission: false,
+  ),
+);
 
 int notifId(String key) => key.hashCode & 0x7fffffff;
 
@@ -34,7 +43,7 @@ class Notifier {
     if (_ready) return;
     try {
       tzdata.initializeTimeZones();
-      await _plugin.initialize(const InitializationSettings(android: AndroidInitializationSettings('@mipmap/ic_launcher')));
+      await _plugin.initialize(notificationSettings);
       // The ask moved into the onboarding permissions step: requesting here
       // fired the system dialog on the very first launch, before the wizard
       // could explain why, and the wizard would then ask a second time.
@@ -50,7 +59,9 @@ class Notifier {
   Future<bool> requestPermission() async {
     if (!_ready) return true;
     try {
-      final impl = await _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      final ios = _plugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+      if (ios != null) return await ios.requestPermissions(alert: true, badge: true, sound: true) ?? false;
+      final impl = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
       final granted = await impl?.requestNotificationsPermission() ?? true;
       return granted;
     } catch (_) {

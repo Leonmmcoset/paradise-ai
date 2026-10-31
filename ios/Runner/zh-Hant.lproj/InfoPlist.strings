@@ -1,0 +1,6 @@
+"CFBundleDisplayName" = "彼岸雙生";
+"NSCameraUsageDescription" = "拍攝相片並傳送至聊天。";
+"NSPhotoLibraryUsageDescription" = "選取相片和影片，用於聊天附件、頭像、貼圖及桌布。";
+"NSContactsUsageDescription" = "選取要在聊天中分享的聯絡人。";
+"NSLocationWhenInUseUsageDescription" = "當你選擇分享位置時，取得目前位置並傳送至聊天。";
+"NSLocalNetworkUsageDescription" = "連線至你在區域網路中設定的 AI 服務、MCP 服務及備份伺服器。";

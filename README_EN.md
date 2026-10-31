@@ -7,6 +7,7 @@ An immersive AI chat app in the style of Telegram.
 [![CI](https://github.com/Celvra/paradise/actions/workflows/ci.yml/badge.svg)](https://github.com/Celvra/paradise/actions/workflows/ci.yml)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 [![Platform: Android](https://img.shields.io/badge/Platform-Android-3DDC84.svg)](https://developer.android.com)
+[![Platform: iOS](https://img.shields.io/badge/Platform-iOS_15%2B-000000.svg)](docs/ios.md)
 
 [中文](README.md)
 
@@ -16,7 +17,7 @@ An immersive AI chat app in the style of Telegram.
 
 ## Development status
 
-We have essentially finished the main requirements of this project and it has been tested on Android. Since I have no other devices to test on, community support is needed.
+The app has been tested on Android. iOS 15+ support includes a native project, simulator integration tests, and an unsigned IPA CI job. See the [iOS compatibility and build notes](docs/ios.md) for validation limits and device checks. Workspace file tools are available on iOS; the local Linux environment and terminal require Android.
 
 ## What it includes
 

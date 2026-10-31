@@ -4,6 +4,7 @@ import 'package:async/async.dart';
 import 'package:flutter/services.dart';
 
 import 'workspace_runtime.dart';
+import 'workspace_platform.dart';
 
 /// Thrown for anything the Dart side can name. [code] is what the workspace
 /// layer branches on and what the user is shown.
@@ -32,6 +33,9 @@ class WorkspaceChannel {
 
   /// Where the rootfs lives and whether proot can be exec'd at all.
   Future<RuntimeStatus> probe() async {
+    if (!supportsLocalEnvironment) {
+      return const RuntimeStatus(ready: false, reason: 'Local Linux environments are only available on Android. Workspace file tools remain available.');
+    }
     try {
       return RuntimeStatus.fromWire(await _method.invokeMapMethod<String, dynamic>('probe'));
     } on MissingPluginException {

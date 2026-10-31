@@ -1,0 +1,6 @@
+"CFBundleDisplayName" = "Paradise";
+"NSCameraUsageDescription" = "Take a photo to attach to a chat.";
+"NSPhotoLibraryUsageDescription" = "Select photos and videos for chats, avatars, stickers, and wallpapers.";
+"NSContactsUsageDescription" = "Select a contact to share in a chat.";
+"NSLocationWhenInUseUsageDescription" = "Share your current location in a chat when you choose.";
+"NSLocalNetworkUsageDescription" = "Connect to AI providers, MCP servers, and backup servers on your local network.";

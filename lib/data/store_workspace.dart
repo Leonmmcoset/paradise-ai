@@ -28,6 +28,9 @@ extension StoreWorkspace on Store {
   /// the switch being on. The settings row uses it to explain an inert toggle.
   bool wsActive(Chat c) => workspace.toolsEnabled && wsFor(c) != null;
 
+  Iterable<String> get wsSupportedTools => WorkspaceTools.toolNames.where(
+      (name) => supportsLocalEnvironment || !WorkspaceTools.needsEnvironment(name));
+
   Future<WsContext?> wsContext(Chat c, {Workspace? w}) async {
     final ws = w ?? wsFor(c);
     if (!workspace.toolsEnabled || ws == null) return null;
@@ -69,6 +72,7 @@ extension StoreWorkspace on Store {
   /// environment.
   bool wsAvailable(String name) {
     if (!WorkspaceTools.needsEnvironment(name)) return true;
+    if (!supportsLocalEnvironment) return false;
     final status = workspaceRuntimeProvider.lastStatus;
     return status != null && status.ready;
   }
@@ -214,8 +218,9 @@ extension StoreWorkspace on Store {
     final w = wsFor(c);
     if (w == null) return L10n.current.wsNoWorkspace;
     if (!workspace.toolsEnabled) return '${w.name} · ${L10n.current.wsToolsOff}';
-    final on = WorkspaceTools.toolNames.where((t) => !w.disabledTools.contains(t)).length;
-    return '${w.name} · $on/${WorkspaceTools.toolNames.length}';
+    final supported = wsSupportedTools.toList();
+    final on = supported.where((t) => !w.disabledTools.contains(t)).length;
+    return '${w.name} · $on/${supported.length}';
   }
 
   // ------------------------------------------------------------- tool table

@@ -11,7 +11,7 @@ import '../../data/store.dart';
 import '../../data/models.dart';
 import '../../data/workspace/workspace.dart';
 import '../../data/workspace/android_proot_runtime.dart';
-import '../../data/workspace/workspace_tools.dart';
+import '../../data/workspace/workspace_platform.dart';
 import '../../l10n/x.dart';
 import '../human_pages.dart' show hOpen;
 import '../tg_cells.dart';
@@ -107,7 +107,7 @@ class _WorkspaceSettingsState extends State<WorkspaceSettingsPage> {
   Widget _row(
       BuildContext context, Store st, Workspace w, BuildContext anchor) {
     final l = context.l;
-    final on = WorkspaceTools.toolNames
+    final on = st.wsSupportedTools
         .where((t) => !w.disabledTools.contains(t))
         .length;
     return TgTextCell(
@@ -115,7 +115,7 @@ class _WorkspaceSettingsState extends State<WorkspaceSettingsPage> {
       icon: Ic.folder,
       subtitle: w.lastUsedAt == null
           ? l.wsNeverUsed
-          : '${on}/${WorkspaceTools.toolNames.length}',
+          : '${on}/${st.wsSupportedTools.length}',
       onTap: () => hOpen(context, WorkspaceFilesPage(workspace: w)),
       onLongPress: () => _menu(context, st, w, anchor),
       trailing: TgIconButton(
@@ -146,9 +146,9 @@ class _WorkspaceSettingsState extends State<WorkspaceSettingsPage> {
         MenuItem(l.wsRename, Ic.pencil, () => _rename(context, st, w)),
         MenuItem(l.wsFiles, Ic.folder,
             () => hOpen(context, WorkspaceFilesPage(workspace: w))),
-        MenuItem(
+        if (supportsLocalEnvironment) MenuItem(
             l.termTitle, Ic.terminal, () => openWorkspaceTerminal(context, w)),
-        MenuItem(l.termSettings, Ic.download,
+        if (supportsLocalEnvironment) MenuItem(l.termSettings, Ic.download,
             () => openEnvironmentSettings(context)),
         MenuItem.gap(),
         MenuItem(l.wsDelete, Ic.trash, () => _delete(context, st, w),
@@ -298,12 +298,12 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
                       height: 1.35,
                       decoration: TextDecoration.none)),
             ),
-            for (final name in WorkspaceTools.toolNames)
+            for (final name in st.wsSupportedTools)
               TgCheckCell(
                 title: _label(context, name),
                 icon: _icon(name),
                 value: !w.disabledTools.contains(name),
-                divider: name != WorkspaceTools.toolNames.last,
+                divider: name != st.wsSupportedTools.last,
                 onChanged: (v) {
                   final next = {...w.disabledTools};
                   if (v) {
@@ -344,6 +344,10 @@ class _WorkspaceFilesPageState extends State<WorkspaceFilesPage> {
 /// Opens a terminal scoped to one managed workspace.
 Future<void> openWorkspaceTerminal(
     BuildContext context, Workspace workspace) async {
+  if (!supportsLocalEnvironment) {
+    openEnvironmentSettings(context);
+    return;
+  }
   final stack = Store.of(context).workspaceStack;
   final runtime = stack?.runtime();
   if (runtime is! AndroidProotRuntime) {

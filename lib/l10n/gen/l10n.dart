@@ -9182,6 +9182,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Let it tune its own character sheet slowly'**
   String get toolDescCharacterCard;
+
+  /// No description provided for @envPlatformUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'The local Linux environment and terminal are available on Android. On iOS you can use workspace files, previews, and file tools.'**
+  String get envPlatformUnsupported;
+
+  /// No description provided for @autoBackupSubIOS.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic backups are stored in the app’s backup folder, accessible in Files. Uninstalling the app deletes them. Export a copy elsewhere or configure remote backups to keep them after uninstalling.'**
+  String get autoBackupSubIOS;
 }
 
 class _AppLocalizationsDelegate

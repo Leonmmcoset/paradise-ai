@@ -6,6 +6,7 @@ import '../core/overlays.dart';
 import '../core/theme.dart';
 import '../core/ui_kit.dart';
 import '../data/store.dart';
+import '../data/local_files.dart';
 import '../l10n/x.dart';
 import 'tg_cells.dart';
 import 'user_persona.dart';
@@ -211,7 +212,9 @@ class _AccountPageState extends State<AccountPage> {
   Future<void> _pick() async {
     try {
       final x = await ip.ImagePicker().pickImage(source: ip.ImageSource.gallery, imageQuality: 92);
-      if (x != null && mounted) Store.read(context).setAvatar(x.path);
+      if (x == null) return;
+      final path = await LocalFiles.keep(x.path, 'avatars');
+      if (mounted) Store.read(context).setAvatar(path);
     } catch (_) {
       if (mounted) showBulletin(context, context.l.galleryUnavailable);
     }

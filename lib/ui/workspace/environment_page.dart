@@ -8,6 +8,7 @@ import '../../core/ui_kit.dart';
 import '../../data/store.dart';
 import '../../data/workspace/android_proot_runtime.dart';
 import '../../data/workspace/environment_installer.dart';
+import '../../data/workspace/workspace_platform.dart';
 import '../../l10n/x.dart';
 import '../human_pages.dart' show hOpen;
 import '../tg_cells.dart';
@@ -41,6 +42,7 @@ class _EnvironmentPageState extends State<EnvironmentPage> {
   }
 
   Future<void> _load() async {
+    if (!supportsLocalEnvironment) return;
     final stack = Store.of(context).workspaceStack;
     if (stack == null) return;
     _sub = stack.installer.states.listen((s) {
@@ -139,6 +141,12 @@ class _EnvironmentPageState extends State<EnvironmentPage> {
     final images = _availableImages();
     final installed = _state.phase == EnvPhase.ready;
     final busy = _state.busy || _busyAction;
+    if (!supportsLocalEnvironment) {
+      return TgSettingsPage(
+        title: l.envTitle,
+        builder: (c, _) => WsEmpty(icon: Ic.info, title: l.envUnsupported, hint: l.envPlatformUnsupported),
+      );
+    }
     return TgSettingsPage(
       title: l.envTitle,
       builder: (c, _) => ListView(

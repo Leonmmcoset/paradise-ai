@@ -36,8 +36,23 @@ flutter pub get
 flutter run
 ```
 
-There is no code generation step to run by hand and no signing config to fill
-in for local work. `flutter run` on a debug build is enough.
+For Android, `flutter run` on a debug build is enough. For iOS, use macOS with
+Xcode, an iOS simulator runtime, CocoaPods, and Rust stable, then prepare the
+native libraries:
+
+```bash
+rustup target add aarch64-apple-ios aarch64-apple-ios-sim x86_64-apple-ios
+dart run typst_flutter:setup
+python3 tool/check_ios_native.py
+bash tool/run_ios_smoke.sh
+bash tool/build_unsigned_ipa.sh
+```
+
+The IPA is written to `build/ios/ipa/`; CI uploads it as
+`paradise-ios-unsigned-ipa`. Simulator tests and unsigned builds need no signing
+credentials. Running on a physical device requires your own signing team in
+`ios/Runner.xcworkspace`. The [iOS notes](docs/ios.md) describe platform limits
+and the checks that still require a real device.
 
 ## Release signing
 

@@ -9,6 +9,7 @@ import '../core/theme.dart';
 import '../core/ui_kit.dart';
 import '../data/ai/tokenizer.dart';
 import '../data/models.dart';
+import '../data/local_files.dart';
 import '../data/store.dart';
 import '../l10n/x.dart';
 import 'ai_widgets.dart';
@@ -235,7 +236,9 @@ class _PersonaCardsSectionState extends State<PersonaCardsSection> {
     try {
       final x = await ip.ImagePicker()
           .pickImage(source: ip.ImageSource.gallery, imageQuality: 92);
-      if (x != null) _st.updatePersonaCard(id, (p) => p.avatarPath = x.path);
+      if (x == null) return;
+      final path = await LocalFiles.keep(x.path, 'avatars');
+      if (mounted) _st.updatePersonaCard(id, (p) => p.avatarPath = path);
     } catch (_) {
       if (mounted) showBulletin(context, context.l.galleryUnavailable);
     }

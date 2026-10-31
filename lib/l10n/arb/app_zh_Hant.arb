@@ -4966,5 +4966,7 @@
   "@humanChatInvalidCard": {
     "description": "Bulletin when the card payload is broken"
   },
-  "toolDescCharacterCard": "讓它緩慢微調自己的人設"
+  "toolDescCharacterCard": "讓它緩慢微調自己的人設",
+  "envPlatformUnsupported": "本機 Linux 環境和終端機僅支援 Android。iOS 可使用工作區檔案、預覽及檔案工具。",
+  "autoBackupSubIOS": "自動備份儲存在應用程式的 backup 資料夾，可透過「檔案」App 存取。移除應用程式會刪除這些備份，請匯出至其他位置或設定遠端備份。"
 }

@@ -353,7 +353,7 @@ class SettingsTab extends StatelessWidget {
     final r = await showTgDialog<String>(
       context,
       title: l.autoBackupTitle,
-      message: l.autoBackupSub,
+      message: Platform.isIOS ? l.autoBackupSubIOS : l.autoBackupSub,
       actions: [
         DialogAction(l.autoBackupModeChange, 'change'),
         DialogAction(l.autoBackupModeInterval(1), 'interval:60'),

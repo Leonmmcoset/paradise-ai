@@ -1,3 +1,5 @@
+import '../local_files.dart';
+
 /// What owns the directory. `managed` lives under the app documents dir and is
 /// ours to delete. `linked` is a folder the user picked and we never remove.
 enum WorkspaceKind { managed, linked }
@@ -84,7 +86,7 @@ class Workspace {
         id: j['id'] as String? ?? '',
         name: j['name'] as String? ?? '',
         kind: workspaceKindOf(j['kind'] as String?),
-        hostPath: j['hostPath'] as String?,
+        hostPath: j['hostPath'] is String ? LocalFiles.resolve(j['hostPath'] as String) : null,
         defaultCwd: j['defaultCwd'] as String? ?? '',
         disabledTools: {for (final e in (j['disabledTools'] as List? ?? const [])) '$e'},
         createdAt: DateTime.fromMillisecondsSinceEpoch((j['createdAt'] as num?)?.toInt() ?? 0),

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui';
 
+import '../local_files.dart';
 import 'human_models.dart';
 
 // The user owned sticker library. Entries come from three places: the built in
@@ -82,7 +83,7 @@ class UserSticker {
   factory UserSticker.fromJson(Map<String, dynamic> j) => UserSticker(
         id: j['id'] as String,
         kind: StickerKind.values.firstWhere((e) => e.name == j['kind'], orElse: () => StickerKind.emoji),
-        value: j['value'] as String? ?? '',
+        value: LocalFiles.resolve(j['value'] as String? ?? ''),
         name: j['name'] as String? ?? '',
         tags: [for (final e in (j['tags'] as List? ?? const [])) '$e'],
         emotion: j['emotion'] as String? ?? '',
@@ -92,7 +93,7 @@ class UserSticker {
         lastUsed: (j['lastUsed'] as num?)?.toInt() ?? 0,
         createdAt: (j['createdAt'] as num?)?.toInt(),
         source: j['source'] as String? ?? 'user',
-        thumb: j['thumb'] as String? ?? '',
+        thumb: LocalFiles.resolve(j['thumb'] as String? ?? ''),
       );
 }
 

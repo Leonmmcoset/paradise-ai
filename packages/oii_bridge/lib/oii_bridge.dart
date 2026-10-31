@@ -27,40 +27,30 @@ typedef _HostSetCbC = Void Function(Pointer<NativeFunction<_HostCbC>>);
 typedef _HostCbC = Void Function(Pointer<ffi.Utf8>, Pointer<ffi.Utf8>);
 typedef _DescribeC = Pointer<ffi.Utf8> Function(Pointer<ffi.Utf8>);
 
-typedef _EngineNewD = Pointer<Void> Function();
-typedef _EngineFreeD = void Function(Pointer<Void>);
-typedef _EngineHostRegD = void Function(Pointer<Void>, Pointer<ffi.Utf8>);
-typedef _EngineLimitsD = void Function(Pointer<Void>, int, int);
-typedef _ParseD = Pointer<ffi.Utf8> Function(Pointer<Void>, Pointer<ffi.Utf8>);
-typedef _EvalD = Pointer<ffi.Utf8> Function(Pointer<Void>, Pointer<ffi.Utf8>, Pointer<ffi.Utf8>);
-typedef _HostReplyD = int Function(Pointer<ffi.Utf8>);
-typedef _HostSetCbD = void Function(Pointer<NativeFunction<_HostCbC>>);
-typedef _DescribeD = Pointer<ffi.Utf8> Function(Pointer<ffi.Utf8>);
+// Let Dart resolve the bundled code asset. On iOS Flutter repackages the dylib
+// as a framework; neither a hard-coded .so nor process() locates that asset.
+const _asset = 'package:oii_bridge/oii_bridge.dart';
 
-final DynamicLibrary _lib = _open();
-
-DynamicLibrary _open() {
-  // the hook bundles the asset and flutter loads it into the process at
-  // startup, so process() finds the symbols everywhere the code asset was
-  // linked; open() is the fallback for a plain dart vm without the asset
-  try {
-    DynamicLibrary.process().lookup('oii_bridge_describe');
-    return DynamicLibrary.process();
-  } catch (_) {
-    return DynamicLibrary.open('liboii_bridge.so');
-  }
-}
-
-final _engineNew = _lib.lookupFunction<_EngineNewC, _EngineNewD>('oii_bridge_engine_new');
-final _engineFree = _lib.lookupFunction<_EngineFreeC, _EngineFreeD>('oii_bridge_engine_free');
-final _hostReg = _lib.lookupFunction<_EngineHostRegC, _EngineHostRegD>('oii_bridge_engine_host_register');
-final _hostUnreg = _lib.lookupFunction<_EngineHostRegC, _EngineHostRegD>('oii_bridge_engine_host_unregister');
-final _limits = _lib.lookupFunction<_EngineLimitsC, _EngineLimitsD>('oii_bridge_engine_limits');
-final _parse = _lib.lookupFunction<_ParseC, _ParseD>('oii_bridge_parse');
-final _eval = _lib.lookupFunction<_EvalC, _EvalD>('oii_bridge_eval');
-final _hostReply = _lib.lookupFunction<_HostReplyC, _HostReplyD>('oii_bridge_host_reply');
-final _hostSetCb = _lib.lookupFunction<_HostSetCbC, _HostSetCbD>('oii_bridge_host_set_callback');
-final _describe = _lib.lookupFunction<_DescribeC, _DescribeD>('oii_bridge_describe');
+@Native<_EngineNewC>(symbol: 'oii_bridge_engine_new', assetId: _asset)
+external Pointer<Void> _engineNew();
+@Native<_EngineFreeC>(symbol: 'oii_bridge_engine_free', assetId: _asset)
+external void _engineFree(Pointer<Void> engine);
+@Native<_EngineHostRegC>(symbol: 'oii_bridge_engine_host_register', assetId: _asset)
+external void _hostReg(Pointer<Void> engine, Pointer<ffi.Utf8> name);
+@Native<_EngineHostRegC>(symbol: 'oii_bridge_engine_host_unregister', assetId: _asset)
+external void _hostUnreg(Pointer<Void> engine, Pointer<ffi.Utf8> name);
+@Native<_EngineLimitsC>(symbol: 'oii_bridge_engine_limits', assetId: _asset)
+external void _limits(Pointer<Void> engine, int steps, int depth);
+@Native<_ParseC>(symbol: 'oii_bridge_parse', assetId: _asset)
+external Pointer<ffi.Utf8> _parse(Pointer<Void> engine, Pointer<ffi.Utf8> source);
+@Native<_EvalC>(symbol: 'oii_bridge_eval', assetId: _asset)
+external Pointer<ffi.Utf8> _eval(Pointer<Void> engine, Pointer<ffi.Utf8> name, Pointer<ffi.Utf8> args);
+@Native<_HostReplyC>(symbol: 'oii_bridge_host_reply', assetId: _asset)
+external int _hostReply(Pointer<ffi.Utf8> reply);
+@Native<_HostSetCbC>(symbol: 'oii_bridge_host_set_callback', assetId: _asset)
+external void _hostSetCb(Pointer<NativeFunction<_HostCbC>> callback);
+@Native<_DescribeC>(symbol: 'oii_bridge_describe', assetId: _asset)
+external Pointer<ffi.Utf8> _describe(Pointer<ffi.Utf8> source);
 
 Pointer<ffi.Utf8> _toUtf8(String s) => s.toNativeUtf8(allocator: ffi.malloc);
 
@@ -163,7 +153,8 @@ class OiiBackupValidation {
   String toString() => ok ? 'OiiBackupValidation($name, ${data.length} fields)' : 'OiiBackupValidation(error: $error)';
 }
 
-final _validateBackup = _lib.lookupFunction<_DescribeC, _DescribeD>('oii_bridge_backup_validate');
+@Native<_DescribeC>(symbol: 'oii_bridge_backup_validate', assetId: _asset)
+external Pointer<ffi.Utf8> _validateBackup(Pointer<ffi.Utf8> source);
 
 /// Checks that [source] is real oii and folds it to data.
 ///

@@ -129,6 +129,10 @@ jobs:
     name: Test iOS and build unsigned IPA
     runs-on: macos-15
     timeout-minutes: 60
+    env:
+      # workmanager_apple references iOS 26 SDK types even when the app runs
+      # on older iOS. The macos-15 image defaults to Xcode 16.4.
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
     steps:
       - uses: actions/checkout@v4
 
@@ -145,6 +149,7 @@ jobs:
       - name: Check Apple build tools
         run: |
           xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
           pod --version
 
       - run: flutter pub get

@@ -5,7 +5,7 @@
 - 最低 iOS 15.0，支持 iPhone 和 iPad。
 - 真机使用 ARM64；模拟器支持 Apple Silicon ARM64 和 Intel x86_64。
 - Bundle ID：`fan.x0.para`。
-- 使用 Flutter 3.47.5 stable（与 CI 一致）、macOS、Xcode、已安装的 iOS SDK/模拟器运行时和 CocoaPods。
+- 使用 Flutter 3.47.5 stable（与 CI 一致）、macOS、Xcode 26 或更高版本、已安装的 iOS SDK/模拟器运行时和 CocoaPods。当前 `workmanager_apple` 引用了 iOS 26 SDK 的类型，因此 Xcode 16.4 无法编译；应用最低运行版本仍为 iOS 15。CI 明确选择 Xcode 26.3。
 - 需要 Rust stable 和三个目标：`aarch64-apple-ios`、`aarch64-apple-ios-sim`、`x86_64-apple-ios`。OII 的构建钩子调用 Cargo、`xcrun clang` 和对应的 Apple SDK。
 - 项目使用 CocoaPods，并在 `pubspec.yaml` 中关闭 Swift Package Manager，确保 Typst 的 podspec 和权限编译宏生效。运行 `pod install` 后产生的 `ios/Podfile.lock` 应随首次在 Mac 上验证的依赖解析结果提交。
 

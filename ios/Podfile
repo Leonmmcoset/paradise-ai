@@ -19,6 +19,8 @@ def flutter_root
 end
 
 require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+require_relative 'typst_podspec'
+extend TypstPodspec
 flutter_ios_podfile_setup
 
 # Entry points looked up by typst_flutter 3.0.0 / flutter_rust_bridge 2.13.0.

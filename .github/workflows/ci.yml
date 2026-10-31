@@ -156,6 +156,9 @@ jobs:
           dart run typst_flutter:setup
           python3 tool/check_ios_native.py
 
+      - name: Install iOS pods
+        run: pod install --project-directory=ios
+
       - name: Exercise native plugins on an iPhone simulator
         run: bash tool/run_ios_smoke.sh
 

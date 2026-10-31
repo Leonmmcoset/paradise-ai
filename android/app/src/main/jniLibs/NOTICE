@@ -7,7 +7,7 @@ the source tree and nothing here is linked into the app.
 
 proot_exec.so, proot_loader.so
 ------------------------------
-Termux proot 5.1.107.96, GPL-2.0-or-later
+Termux proot 5.1.107.101, GPL-2.0-or-later
 https://github.com/termux/proot
 
 proot_exec.so is actually Termux's proot binary, renamed. Both are executed as

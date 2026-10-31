@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 # Download Termux PRoot (and its shared-library deps) for Android jniLibs.
 #
-# OpenMinis pinned Termux proot 5.1.107-70. That build has rolled off
-# https://packages.termux.dev/apt/termux-main/pool/main/p/proot/ — the
-# current package is 5.1.107.92, which is dynamically linked against
-# libtalloc and libandroid-shmem.
+# The Termux pool rolls old versions off. Keep the pinned versions below and
+# proot_checksums.txt in sync when updating. PRoot is dynamically linked
+# against libtalloc and libandroid-shmem.
 #
 # Layout written:
 #   android/app/src/main/jniLibs/<abi>/libproot_exec.so
@@ -31,7 +30,7 @@ JNI_LIBS="$REPO_ROOT/android/app/src/main/jniLibs"
 TERMUX_POOL="${TERMUX_POOL:-https://packages.termux.dev/apt/termux-main/pool/main}"
 
 # Rolling Termux versions. Override with env vars if the pool moves again.
-PROOT_VERSION="${PROOT_VERSION:-5.1.107.96}"
+PROOT_VERSION="${PROOT_VERSION:-5.1.107.101}"
 TALLOC_VERSION="${TALLOC_VERSION:-2.5.0}"
 SHMEM_VERSION="${SHMEM_VERSION:-0.7}"
 

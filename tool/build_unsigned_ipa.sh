@@ -12,7 +12,7 @@ fi
 flutter build ios --release --no-codesign
 app='build/ios/iphoneos/Runner.app'
 [[ -f "$app/Runner" ]] || { echo "Missing $app/Runner" >&2; exit 1; }
-xcrun lipo -verify_arch arm64 "$app/Runner"
+xcrun lipo "$app/Runner" -verify_arch arm64
 if [[ -d "$app/_CodeSignature" || -f "$app/embedded.mobileprovision" ]]; then
   echo 'Expected an unsigned application without a provisioning profile.' >&2
   exit 1
@@ -37,7 +37,7 @@ for framework in "$app"/Frameworks/*.framework; do
   case "$framework" in
     *typst_flutter*|*oii_bridge*|*ratex*|*RaTeX*)
       executable=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$framework/Info.plist")
-      xcrun lipo -verify_arch arm64 "$framework/$executable"
+      xcrun lipo "$framework/$executable" -verify_arch arm64
       xcrun nm -gU "$framework/$executable" >> "$symbols"
       ;;
   esac

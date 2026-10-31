@@ -91,7 +91,12 @@ void main() {
       expect(await FlutterTts().getVoices, isA<List>());
 
       final notifications = FlutterLocalNotificationsPlugin();
-      expect(await notifications.initialize(notificationSettings), isTrue);
+      // flutter_local_notifications 18.0.1 returns false on iOS when no
+      // permissions are requested, even after initialization succeeds.
+      expect(await notifications.initialize(notificationSettings), isFalse);
+      final iosNotifications = notifications.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+      expect(iosNotifications, isNotNull);
+      expect(await iosNotifications!.checkPermissions(), isNotNull);
       expect(await notifications.pendingNotificationRequests(), isA<List<PendingNotificationRequest>>());
       await Workmanager().initialize(backgroundDispatcher);
     });

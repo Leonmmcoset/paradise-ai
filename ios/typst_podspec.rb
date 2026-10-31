@@ -1,8 +1,9 @@
 require 'fileutils'
 
 # typst_flutter 3.0.0 computes an absolute vendored_frameworks path, which
-# CocoaPods rejects before post_install runs. Build a local spec with relative
-# paths and symlink its inputs, leaving the shared pub cache untouched.
+# CocoaPods rejects before post_install runs. Its simulator archive also has
+# a different basename from the device archive, breaking CocoaPods' -l flags.
+# Build a source pod and link the SDK's archive explicitly in the Podfile.
 module TypstPodspec
   # Intercept Flutter's normal pod declaration so CocoaPods stores the corrected
   # source path, rather than changing a temporary Dependency object afterward.
@@ -24,21 +25,21 @@ module TypstPodspec
     end
 
     spec = Pod::Specification.from_file(File.join(plugin_ios, 'typst_flutter.podspec'))
-    spec.vendored_frameworks = 'typst_flutter.xcframework'
+    spec.vendored_frameworks = []
     spec.license = { :type => 'Apache-2.0', :file => 'LICENSE' }
 
     relative_directory = '.symlinks/typst_flutter_pod'
     directory = File.join(ios_directory, relative_directory)
     FileUtils.mkdir_p(directory)
-    {
-      'Classes' => File.join(plugin_ios, 'Classes'),
-      'LICENSE' => File.join(plugin_root, 'LICENSE'),
-      'typst_flutter.xcframework' => framework,
-    }.each do |name, source|
-      link = File.join(directory, name)
-      File.unlink(link) if File.symlink?(link)
-      File.symlink(source, link)
-    end
+    # CocoaPods' recursive source discovery does not follow directory symlinks.
+    # Copy the small C wrapper so this is a native framework target that can
+    # receive the Podfile's per-SDK linker settings.
+    classes = File.join(directory, 'Classes')
+    FileUtils.rm_rf(classes)
+    FileUtils.cp_r(File.join(plugin_ios, 'Classes'), classes)
+    license = File.join(directory, 'LICENSE')
+    File.unlink(license) if File.symlink?(license)
+    FileUtils.cp(File.join(plugin_root, 'LICENSE'), directory)
     File.write(File.join(directory, 'typst_flutter.podspec.json'), spec.to_pretty_json)
     relative_directory
   end

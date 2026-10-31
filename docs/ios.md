@@ -58,7 +58,7 @@ CI 的 `build-ios` 作业在 `macos-15` 上执行依赖准备、iPhone 模拟器
 | `terminal_view`（本地维护版本） | Flutter 终端绘制代码可以编译；本地终端所需的 PRoot 运行时仅支持 Android，iOS 隐藏终端入口。 |
 | `oii_bridge`（本地 Rust 库） | 按真机/模拟器分别选择 Rust ABI 和 SDK，输出 dylib；Dart 通过 `@Native` 加载 Flutter 打包的 code asset。模拟器测试解释器、工作 isolate、宿主回调和备份验证；Release 打包检查导出符号。 |
 | `ratex_flutter` | 上游 XCFramework 包含真机 ARM64、模拟器 ARM64/x86_64，podspec 保留 FFI 入口。模拟器实际解析公式，Release 打包检查符号。 |
-| `typst_flutter` | 使用上游发布的静态 XCFramework。Podfile 生成本地 podspec，将上游 3.0.0 的绝对 `vendored_frameworks` 路径改为 CocoaPods 接受的相对路径；输入文件通过符号链接复用，不修改 pub 缓存。链接对应切片并显式保留 19 个 FFI 入口，避免符号被省略。准备脚本检查全部切片；模拟器实际编译离线 CeTZ 绘图和 CJK 字体，Release 打包检查符号。 |
+| `typst_flutter` | 使用上游发布的静态 XCFramework。Podfile 生成本地源码 podspec，复制少量 C 包装源码，并移除上游 3.0.0 无效的绝对 `vendored_frameworks` 声明；不修改 pub 缓存。直接链接 SDK 对应的原始静态库切片，兼容真机/模拟器库文件名不同的情况，并显式保留 19 个 FFI 入口，避免符号被省略。准备脚本检查全部切片；模拟器实际编译离线 CeTZ 绘图和 CJK 字体，Release 打包检查符号。 |
 
 开发依赖 `flutter_test`、`integration_test`、`file_picker_platform_interface`、`path_provider_platform_interface`、`sqflite_common_ffi` 仅用于测试/验证，不提供额外产品功能。
 
